@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: paperambulance-backend
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && gunicorn app.main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: CLERK_FRONTEND_API
+        sync: false
+      - key: NEON_AUTH_JWKS_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "11520" # 8 days
+      - key: PROJECT_NAME
+        value: "PaperAmbulance"
