@@ -20,10 +20,13 @@ def read_profile_me(
     user_id = current_user.get("sub") # Clerk use 'sub' for user ID
     profile = db.query(models.Profile).filter(models.Profile.user_id_str == user_id).first()
     if not profile:
-        raise HTTPException(
-            status_code=404,
-            detail="Profile not found",
-        )
+        # Return a shell profile to avoid 404 console errors for new users
+        return {
+            "id": 0,
+            "user_id_str": user_id,
+            "data": {},
+            "updated_at": None
+        }
     return profile
 
 @router.post("/me", response_model=profile_schema.Profile)
