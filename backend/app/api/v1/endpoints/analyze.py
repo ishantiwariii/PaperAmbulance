@@ -26,12 +26,27 @@ async def fill_form(
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    # Run the Agent
-    result = await form_agent.run(
-        raw_fields=fields, 
-        profile_data=profile.data or {}, 
-        user_id=user_id
-    )
+    # --- MANUAL ENGINE START ---
+    # Bypass the LangGraph agent to avoid AI dependencies
+    from app.services.ai_service import ai_service
+    
+    # 1. Analyze fields using keyword matching
+    analysis = await ai_service.analyze_form_fields(fields)
+    
+    # 2. Map profile data to fields
+    fill_map = await ai_service.map_profile_to_fields(analysis, profile.data or {})
+    
+    # 3. Identify missing fields
+    all_required_intents = [item["intent"] for item in analysis if item["intent"] != "unknown"]
+    missing = [intent for intent in all_required_intents if intent not in (profile.data or {})]
+    
+    result = {
+        "fill_map": fill_map,
+        "missing_fields": missing,
+        "status": "ready" if not missing else "awaiting_data",
+        "message": "Manual mapping complete." if not missing else f"Missing: {', '.join(missing)}"
+    }
+    # --- MANUAL ENGINE END ---
     
     # Log history
     history_entry = models.FormHistory(

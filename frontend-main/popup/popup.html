@@ -76,6 +76,15 @@
       </div>
 
       <button id="logout-btn" class="text-link">Sign Out</button>
+
+      <!-- Environment Selector -->
+      <div class="env-selector" style="margin-top: 12px; border-top: 1px solid var(--glass-border); padding-top: 12px; display: flex; align-items: center; gap: 8px; justify-content: center;">
+        <span style="font-size: 10px; color: var(--text-secondary);">Env:</span>
+        <select id="env-select" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: white; font-size: 10px; border-radius: 4px; padding: 2px 4px;">
+          <option value="prod">Production (Render)</option>
+          <option value="local">Development (Local)</option>
+        </select>
+      </div>
     </div>
 
     <script src="popup.js"></script>

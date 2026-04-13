@@ -1,9 +1,39 @@
 // popup/popup.js
 
-const BACKEND_URL = "https://paperambulance.onrender.com";
-const AUTH_API_BASE = "https://paperambulance.onrender.com/api/v1/auth";
+let BACKEND_URL = "https://paperambulance.onrender.com";
+let AUTH_API_BASE = "https://paperambulance.onrender.com/api/v1/auth";
 
 document.addEventListener("DOMContentLoaded", () => {
+    // --- Environment Setup ---
+    const envSelect = document.getElementById("env-select");
+    
+    function updateBackendUrls(mode) {
+        if (mode === "local") {
+            BACKEND_URL = "http://127.0.0.1:8000";
+            AUTH_API_BASE = "http://127.0.0.1:8000/api/v1/auth";
+        } else {
+            BACKEND_URL = "https://paperambulance.onrender.com";
+            AUTH_API_BASE = "https://paperambulance.onrender.com/api/v1/auth";
+        }
+    }
+
+    chrome.storage.local.get(["envMode"], (res) => {
+        const mode = res.envMode || "prod";
+        if (envSelect) envSelect.value = mode;
+        updateBackendUrls(mode);
+        checkAuthState(); // Initial check
+    });
+
+    if (envSelect) {
+        envSelect.addEventListener("change", (e) => {
+            const mode = e.target.value;
+            chrome.storage.local.set({ envMode: mode }, () => {
+                updateBackendUrls(mode);
+                window.location.reload(); // Refresh to apply new URL
+            });
+        });
+    }
+
   // --- UI Elements ---
   const authSubmitBtn = document.getElementById("auth-submit-btn");
   const authToggleBtn = document.getElementById("auth-toggle-btn");
@@ -289,6 +319,4 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
   });
-
-  checkAuthState();
 });

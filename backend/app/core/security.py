@@ -40,9 +40,13 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="No token provided")
 
     # 1. Try to find real session if it exists (Better Auth)
-    session = db.query(models.Session).filter(models.Session.token == token).first()
-    if session:
-        return {"sub": session.user_id_str, "type": "session"}
+    try:
+        session = db.query(models.Session).filter(models.Session.token == token).first()
+        if session:
+            return {"sub": session.user_id_str, "type": "session"}
+    except Exception as e:
+        # Log error but don't crash - fallback to JWT or demo mode
+        print(f"DEBUG: Session DB lookup failed (probably table missing): {str(e)}")
 
     # 2. Try to decode as JWT if it looks like one (Clerk)
     if token.count('.') == 2:
