@@ -12,21 +12,27 @@ def get_auth_url(endpoint: str) -> str:
     return f"{base}/{endpoint.lstrip('/')}"
 
 @router.post("/login")
-async def login_proxy(credentials: Dict[str, Any]) -> Any:
+async def login_proxy(credentials: Dict[str, Any], request: Request) -> Any:
     """
     Proxies login requests to Neon Auth to avoid CORS issues in Chrome Extension.
     """
     url = get_auth_url("sign-in/email")
+    
+    # Better Auth requires an Origin header to handle callback URLs correctly
+    origin = request.headers.get("origin") or str(request.base_url).rstrip("/")
     
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
                 url,
                 json=credentials,
-                headers={"Content-Type": "application/json"}
+                headers={
+                    "Content-Type": "application/json",
+                    "Origin": origin
+                }
             )
             
-            # Forward the response with its original status code and body
+            # Forward the response
             return JSONResponse(
                 status_code=response.status_code,
                 content=response.json()
@@ -35,18 +41,23 @@ async def login_proxy(credentials: Dict[str, Any]) -> Any:
             raise HTTPException(status_code=500, detail=f"Auth Proxy Error: {str(e)}")
 
 @router.post("/signup")
-async def signup_proxy(credentials: Dict[str, Any]) -> Any:
+async def signup_proxy(credentials: Dict[str, Any], request: Request) -> Any:
     """
     Proxies signup requests to Neon Auth to avoid CORS issues in Chrome Extension.
     """
     url = get_auth_url("sign-up/email")
+    
+    origin = request.headers.get("origin") or str(request.base_url).rstrip("/")
     
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
                 url,
                 json=credentials,
-                headers={"Content-Type": "application/json"}
+                headers={
+                    "Content-Type": "application/json",
+                    "Origin": origin
+                }
             )
             
             return JSONResponse(
