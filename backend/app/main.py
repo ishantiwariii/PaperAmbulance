@@ -50,6 +50,10 @@ def run_migrations():
                     END IF;
                 END $$;
             """))
+            # Make hashed_password nullable if it's not (Auth is handled by Clerk)
+            conn.execute(text("""
+                ALTER TABLE users ALTER COLUMN hashed_password DROP NOT NULL;
+            """))
             conn.commit()
 
             # Add sessions table if missing
