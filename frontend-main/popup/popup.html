@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PaperAmbulance</title>
+    <link rel="stylesheet" href="popup.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="glass-bg"></div>
+    
+    <header>
+      <div class="logo-container">
+        <span class="emoji">🚑</span>
+        <h1>PaperAmbulance</h1>
+      </div>
+      <p class="tagline">Duniya ka koi bhi form — hum bhar denge</p>
+    </header>
+
+    <!-- Guest View -->
+    <div id="guest-view" class="view-section hidden">
+      <div class="status-card" style="text-align: center; justify-content: center; padding: 30px 16px;">
+        <p style="font-size: 14px; line-height: 1.5;">Login karke apna profile load kariye aur magic dekhiye! ✨</p>
+      </div>
+      <button id="login-btn" class="btn primary-btn">Login / Sign Up</button>
+    </div>
+
+    <!-- Authenticated View -->
+    <div id="auth-view" class="view-section">
+      <div class="status-card">
+        <div class="status-indicator scanning"></div>
+        <p id="form-status">Scanning for forms...</p>
+      </div>
+
+      <button id="autofill-btn" class="btn primary-btn" disabled>
+        <span>⚡</span> Auto-Fill Form
+      </button>
+
+      <div class="profile-summary">
+        <h3>Live Profile Status</h3>
+        <ul id="document-list">
+          <li data-key="full_name">
+            <span>Identification</span> <span class="badge error">Checking...</span>
+          </li>
+          <li data-key="pan_number">
+            <span>Tax Profile</span> <span class="badge error">Checking...</span>
+          </li>
+          <li data-key="phone_number">
+            <span>Contact Info</span> <span class="badge error">Checking...</span>
+          </li>
+        </ul>
+      </div>
+
+      <button id="voice-btn" class="btn secondary-btn">
+        <span>🎤</span> Voice Update (Hindi)
+      </button>
+      
+      <p id="transcription-output" class="hidden" style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; text-align: center; font-style: italic;"></p>
+      
+      <div id="manual-fallback" class="hidden" style="display: flex; flex-direction: column; gap: 8px;">
+        <textarea id="manual-text" placeholder="No Mic? Type like: 'Mera naam Rahul hai...'" style="width: 100%; height: 50px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 8px; color: white; padding: 8px; font-size: 11px; resize: none;"></textarea>
+        <button id="manual-submit-btn" class="btn secondary-btn" style="padding: 8px; font-size: 12px;">Save Typed Profile</button>
+      </div>
+
+      <button id="logout-btn" class="text-link">Sign Out</button>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

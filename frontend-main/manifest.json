@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "PaperAmbulance 🚑",
+  "version": "1.0",
+  "description": "Duniya ka koi bhi form — PaperAmbulance bhar dega",
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/detection.js", "content/fill.js"]
+    }
+  ],
+  "host_permissions": [
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "https://*.neonauth.c-5.us-east-1.aws.neon.tech/*"
+  ],
+  "permissions": ["activeTab", "storage", "scripting", "identity", "cookies"]
+}
