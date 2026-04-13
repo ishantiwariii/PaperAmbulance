@@ -1,8 +1,5 @@
 from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from app.api.v1.endpoints import profiles
-from app.db.session import get_db
 from app.services.ai_service import ai_service
 from app.core.security import get_current_user
 

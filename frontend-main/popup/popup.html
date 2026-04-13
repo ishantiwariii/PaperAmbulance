@@ -17,16 +17,29 @@
       <p class="tagline">Duniya ka koi bhi form — hum bhar denge</p>
     </header>
 
-    <!-- Guest View -->
+    <!-- Guest View (Auth Form) -->
     <div id="guest-view" class="view-section hidden">
-      <div class="status-card" style="text-align: center; justify-content: center; padding: 30px 16px;">
-        <p style="font-size: 14px; line-height: 1.5;">Login karke apna profile load kariye aur magic dekhiye! ✨</p>
+      <div id="auth-form-container" class="auth-card">
+        <h2 id="auth-title">Welcome Back!</h2>
+        <p id="auth-subtitle">Login to sync your profile across devices.</p>
+        
+        <input type="text" id="auth-name" class="auth-input hidden" placeholder="Full Name (e.g. Rahul Kumar)">
+        <input type="email" id="auth-email" class="auth-input" placeholder="Email Address">
+        <input type="password" id="auth-password" class="auth-input" placeholder="Password">
+        
+        <button id="auth-submit-btn" class="btn primary-btn">
+          <span>🔑</span> <span id="auth-submit-text">Sign In</span>
+        </button>
+        
+        <p class="auth-footer">
+          <span id="auth-toggle-msg">Don't have an account?</span>
+          <a href="#" id="auth-toggle-btn" class="auth-toggle-link">Sign Up</a>
+        </p>
       </div>
-      <button id="login-btn" class="btn primary-btn">Login / Sign Up</button>
     </div>
 
     <!-- Authenticated View -->
-    <div id="auth-view" class="view-section">
+    <div id="auth-view" class="view-section hidden">
       <div class="status-card">
         <div class="status-indicator scanning"></div>
         <p id="form-status">Scanning for forms...</p>
@@ -57,7 +70,7 @@
       
       <p id="transcription-output" class="hidden" style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; text-align: center; font-style: italic;"></p>
       
-      <div id="manual-fallback" class="hidden" style="display: flex; flex-direction: column; gap: 8px;">
+      <div id="manual-fallback" class="hidden" style="flex-direction: column; gap: 8px;">
         <textarea id="manual-text" placeholder="No Mic? Type like: 'Mera naam Rahul hai...'" style="width: 100%; height: 50px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 8px; color: white; padding: 8px; font-size: 11px; resize: none;"></textarea>
         <button id="manual-submit-btn" class="btn secondary-btn" style="padding: 8px; font-size: 12px;">Save Typed Profile</button>
       </div>

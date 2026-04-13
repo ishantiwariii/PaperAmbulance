@@ -27,7 +27,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
 
       if (targetInput) {
-        targetInput.value = value;
+        // Handle different input types
+        const type = targetInput.type ? targetInput.type.toLowerCase() : "";
+        
+        if (type === "checkbox" || type === "radio") {
+          targetInput.checked = (value.toString().toLowerCase() === "true" || value === "1" || value === "yes");
+        } else {
+          targetInput.value = value;
+        }
+
+        // Trigger events so modern frameworks (React/Vue) see the change
+        targetInput.dispatchEvent(new Event("input", { bubbles: true }));
+        targetInput.dispatchEvent(new Event("change", { bubbles: true }));
+        
         highlightField(targetInput);
       }
     });
@@ -36,13 +48,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Add a nice visual glow so the user knows what we changed
 function highlightField(element) {
+  const originalTransition = element.style.transition;
+  const originalShadow = element.style.boxShadow;
+  const originalBorder = element.style.border;
+
   element.style.transition = "all 0.3s ease";
-  element.style.boxShadow = "0 0 8px #34C759";
+  element.style.boxShadow = "0 0 10px rgba(52, 199, 89, 0.6)";
   element.style.border = "1px solid #34C759";
 
-  // Remove the glow after 2 seconds
+  // Remove the glow after 2.5 seconds
   setTimeout(() => {
-    element.style.boxShadow = "none";
-    element.style.border = "";
-  }, 2000);
+    element.style.boxShadow = originalShadow;
+    element.style.border = originalBorder;
+    setTimeout(() => {
+      element.style.transition = originalTransition;
+    }, 300);
+  }, 2500);
 }
