@@ -80,8 +80,9 @@ class AIService:
             chain = prompt | self.llm
             response = await chain.ainvoke({"transcript": transcript})
         except Exception as e:
-            print(f"AI Error (parse_voice_transcript): {str(e)}")
-            raise Exception(f"AI Service Failure: {str(e)}")
+            err_msg = str(e)
+            print(f"AI Error (parse_voice_transcript): {err_msg}")
+            raise Exception(f"Gemini Error: {err_msg}")
         
         try:
             content = response.content.strip()

@@ -203,7 +203,8 @@ document.addEventListener("DOMContentLoaded", () => {
               
               if (!parseRes.ok) {
                   const errorData = await parseRes.json().catch(() => ({}));
-                  throw new Error(errorData.detail || "Voice parse failed");
+                  console.error("Parse API Error Output:", errorData);
+                  throw new Error(errorData.detail || errorData.message || "Voice parse failed");
               }
               
               const resData = await parseRes.json();
