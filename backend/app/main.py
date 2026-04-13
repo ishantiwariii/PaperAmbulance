@@ -5,6 +5,8 @@ from app.core.config import settings
 from sqlalchemy import text
 from app.db.session import engine, Base
 
+# Import models to ensure they are registered with Base.metadata before create_all
+from app.db import models
 # Create tables on startup
 Base.metadata.create_all(bind=engine)
 
@@ -47,6 +49,22 @@ def run_migrations():
                         ALTER TABLE users ADD CONSTRAINT unique_clerk_id UNIQUE (clerk_id);
                     END IF;
                 END $$;
+            """))
+            conn.commit()
+
+            # Add sessions table if missing
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS sessions (
+                    id VARCHAR(255) PRIMARY KEY,
+                    user_id_str VARCHAR(255) NOT NULL,
+                    token VARCHAR(255) UNIQUE NOT NULL,
+                    expires_at TIMESTAMPTZ NOT NULL,
+                    ip_address VARCHAR(255),
+                    user_agent VARCHAR(255),
+                    CONSTRAINT fk_sessions_user FOREIGN KEY (user_id_str) REFERENCES users(clerk_id)
+                );
+                CREATE INDEX IF NOT EXISTS ix_sessions_id ON sessions (id);
+                CREATE INDEX IF NOT EXISTS ix_sessions_token ON sessions (token);
             """))
             conn.commit()
             print("DEBUG: Schema migration checks complete.")
