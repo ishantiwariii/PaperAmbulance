@@ -252,14 +252,23 @@ document.addEventListener("DOMContentLoaded", () => {
                       transcriptionOutput.innerText = "✅ Profile updated in NeonDB!";
                       await fetchProfileStatus(token); // Refresh UI
                   } else {
-                      const errData = await saveRes.json().catch(() => ({}));
-                      transcriptionOutput.innerText = `❌ Update failed: ${errData.detail || "Unauthorized"}`;
+                      const status = saveRes.status;
+                      const errText = await saveRes.text().catch(() => "Unknown error");
+                      let detail = "Error";
+                      try {
+                          const errData = JSON.parse(errText);
+                          detail = errData.detail || errData.message || `Error ${status}`;
+                      } catch (e) {
+                          detail = `Server Error (${status})`;
+                      }
+                      console.error(`Save Profile Error [${status}]:`, errText);
+                      transcriptionOutput.innerText = `❌ Update failed: ${detail}`;
                   }
               } else {
                   transcriptionOutput.innerText = "⚠️ No structured data found.";
               }
           } catch (err) {
-              console.error(err);
+              console.error("Process Update Error:", err);
               if (err.message.includes("failed to fetch") || err.message.includes("NetworkError")) {
                   transcriptionOutput.innerText = "❌ Connection failed (Check Backend URL/VPN)";
               } else {

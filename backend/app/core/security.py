@@ -47,6 +47,7 @@ async def get_current_user(
     except Exception as e:
         # Log error but don't crash - fallback to JWT or demo mode
         print(f"DEBUG: Session DB lookup failed (probably table missing): {str(e)}")
+        db.rollback() # CRITICAL: Clear the failed transaction state
 
     # 2. Try to decode as JWT if it looks like one (Clerk)
     if token.count('.') == 2:
