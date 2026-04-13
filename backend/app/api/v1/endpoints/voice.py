@@ -18,7 +18,10 @@ async def parse_voice(
     if not transcript:
         raise HTTPException(status_code=400, detail="Transcript is required")
     
-    extracted_data = await ai_service.parse_voice_transcript(transcript)
+    try:
+        extracted_data = await ai_service.parse_voice_transcript(transcript)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     
     return {
         "understood": extracted_data,

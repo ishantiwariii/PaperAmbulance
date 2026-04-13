@@ -39,14 +39,27 @@ def update_or_create_profile_me(
     user_id = current_user.get("sub")
     profile = db.query(models.Profile).filter(models.Profile.user_id_str == user_id).first()
     
+    # Ensure internal user record exists
+    user = db.query(models.User).filter(models.User.clerk_id == user_id).first()
+    if not user:
+        user = models.User(
+            clerk_id=user_id,
+            email=current_user.get("email", "unknown@user.com")
+        )
+        db.add(user)
+        db.flush() # Get user.id without committing
+    
     if profile:
         # Update
         if profile_in.data is not None:
             profile.data = profile_in.data
+        if not profile.user_id: # Link if missing
+            profile.user_id = user.id
     else:
         # Create
         profile = models.Profile(
             user_id_str=user_id,
+            user_id=user.id,
             data=profile_in.data
         )
         db.add(profile)

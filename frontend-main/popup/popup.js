@@ -86,28 +86,32 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify(body)
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || errorData.message || "Authentication failed");
+      }
+
       const result = await response.json();
 
-      if (response.ok) {
-        // Neon Auth returns a token in the 'token' or 'session' field
-        const token = result.token || (result.session && result.session.token);
-        if (token) {
-          chrome.storage.local.set({ isAuthenticated: true, userToken: token }, () => {
-            checkAuthState();
-          });
-        } else {
-          // Handle cases where auth might be working but token is hidden in cookies
-          // For now, we assume token is returned as per typical Standalone API
-          chrome.storage.local.set({ isAuthenticated: true, userToken: "MOCK_TOKEN_SUCCESS" }, () => {
-            checkAuthState();
-          });
-        }
+      // Exhaustive search for the JWT in Clerk/Neon Auth OR Better Auth token
+      const token = result.token || 
+                    (result.session && result.session.token) ||
+                    (result.session && result.session.last_active_token && result.session.last_active_token.jwt) ||
+                    result.jwt ||
+                    (result.client && result.client.sessions && result.client.sessions[0] && result.client.sessions[0].last_active_token && result.client.sessions[0].last_active_token.jwt);
+
+      if (token) {
+        chrome.storage.local.set({ isAuthenticated: true, userToken: token }, () => {
+          checkAuthState();
+        });
       } else {
-        alert(`Auth Error: ${result.message || "Invalid credentials"}`);
+        const foundKeys = Object.keys(result).join(", ");
+        alert(`Auth Succeeded but no valid token found. Found keys: [${foundKeys}].`);
+        console.log("Full Auth Response:", result);
       }
     } catch (err) {
       console.error(err);
-      alert("Connection failed. Is the backend or auth service down?");
+      alert(`Auth Failed: ${err.message}`);
     } finally {
       authSubmitBtn.disabled = false;
       authSubmitText.innerText = isSignupMode ? "Create Account" : "Sign In";
@@ -182,7 +186,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Voice Parser Logic ---
   async function processProfileUpdate(transcript) {
       chrome.storage.local.get(["userToken"], async (res) => {
-          const token = res.userToken || "LOCAL_DEV_TOKEN";
+          const token = res.userToken;
+          if (!token) {
+              transcriptionOutput.innerText = "❌ No valid session found. Please Log Out and Sign In again.";
+              return;
+          }
           transcriptionOutput.classList.remove("hidden");
           transcriptionOutput.innerText = `Parsing Input: "${transcript}"...`;
           
@@ -192,6 +200,12 @@ document.addEventListener("DOMContentLoaded", () => {
                   headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                   body: JSON.stringify({ transcript })
               });
+              
+              if (!parseRes.ok) {
+                  const errorData = await parseRes.json().catch(() => ({}));
+                  throw new Error(errorData.detail || "Voice parse failed");
+              }
+              
               const resData = await parseRes.json();
               const extracted = resData.understood;
               
@@ -202,14 +216,24 @@ document.addEventListener("DOMContentLoaded", () => {
                       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                       body: JSON.stringify({ data: extracted })
                   });
+                  
                   if (saveRes.ok) {
                       transcriptionOutput.innerText = "✅ Profile updated in NeonDB!";
                       await fetchProfileStatus(token); // Refresh UI
+                  } else {
+                      const errData = await saveRes.json().catch(() => ({}));
+                      transcriptionOutput.innerText = `❌ Update failed: ${errData.detail || "Unauthorized"}`;
                   }
+              } else {
+                  transcriptionOutput.innerText = "⚠️ No structured data found.";
               }
           } catch (err) {
               console.error(err);
-              transcriptionOutput.innerText = "❌ Error connecting to backend.";
+              if (err.message.includes("failed to fetch") || err.message.includes("NetworkError")) {
+                  transcriptionOutput.innerText = "❌ Connection failed (Check Backend URL/VPN)";
+              } else {
+                  transcriptionOutput.innerText = `❌ Error: ${err.message}`;
+              }
           }
       });
   }
@@ -226,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const tabId = tabs[0].id;
         voiceBtn.innerHTML = "<span>🔴</span> Listening...";
         transcriptionOutput.classList.remove("hidden");
-        transcriptionOutput.innerText = "Check your browser tab for the Mic prompt!";
+        transcriptionOutput.innerText = "Check your browser tab (NOT this popup) for the Mic permission prompt and speak!";
         
         chrome.scripting.executeScript({
             target: { tabId: tabId },

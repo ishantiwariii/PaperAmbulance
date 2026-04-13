@@ -7,7 +7,7 @@ from app.core.config import settings
 class AIService:
     def __init__(self):
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             google_api_key=settings.GOOGLE_API_KEY,
             temperature=0
         )
@@ -27,8 +27,12 @@ class AIService:
         Return ONLY a JSON list of objects with "field_id", "intent", and "confidence".
         """)
         
-        chain = prompt | self.llm
-        response = await chain.ainvoke({"fields": json.dumps(fields)})
+        try:
+            chain = prompt | self.llm
+            response = await chain.ainvoke({"fields": json.dumps(fields)})
+        except Exception as e:
+            print(f"AI Error (analyze_form_fields): {str(e)}")
+            raise Exception(f"AI Service Failure: {str(e)}")
         
         try:
             # Handle potential markdown formatting in response
@@ -72,8 +76,12 @@ class AIService:
         Return ONLY a JSON object with the extracted information. If a field is not present, do not include it.
         """)
         
-        chain = prompt | self.llm
-        response = await chain.ainvoke({"transcript": transcript})
+        try:
+            chain = prompt | self.llm
+            response = await chain.ainvoke({"transcript": transcript})
+        except Exception as e:
+            print(f"AI Error (parse_voice_transcript): {str(e)}")
+            raise Exception(f"AI Service Failure: {str(e)}")
         
         try:
             content = response.content.strip()

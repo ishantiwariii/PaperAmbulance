@@ -40,3 +40,15 @@ class FormHistory(Base):
     field_count = Column(Integer, default=0)
 
     user = relationship("User", back_populates="form_history")
+
+class Session(Base):
+    __tablename__ = "sessions"
+
+    id = Column(String, primary_key=True, index=True)
+    user_id_str = Column(String, ForeignKey("users.clerk_id"), nullable=False)
+    token = Column(String, unique=True, index=True, nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    ip_address = Column(String, nullable=True)
+    user_agent = Column(String, nullable=True)
+
+    user = relationship("User", backref="sessions")

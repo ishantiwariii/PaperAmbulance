@@ -32,10 +32,18 @@ async def login_proxy(credentials: Dict[str, Any], request: Request) -> Any:
                 }
             )
             
-            # Forward the response
+            data = response.json()
+            
+            # If successful, try to find a session token in cookies if not in body
+            if response.status_code == 200:
+                # Look for Clerk session cookie
+                session_cookie = response.cookies.get("__session") or response.cookies.get("__clerk_db_jwt")
+                if session_cookie and "token" not in data:
+                    data["token"] = session_cookie
+                    
             return JSONResponse(
                 status_code=response.status_code,
-                content=response.json()
+                content=data
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Auth Proxy Error: {str(e)}")
@@ -60,9 +68,18 @@ async def signup_proxy(credentials: Dict[str, Any], request: Request) -> Any:
                 }
             )
             
+            data = response.json()
+            
+            # If successful, try to find a session token in cookies if not in body
+            if response.status_code == 200:
+                # Look for Clerk session cookie
+                session_cookie = response.cookies.get("__session") or response.cookies.get("__clerk_db_jwt")
+                if session_cookie and "token" not in data:
+                    data["token"] = session_cookie
+                    
             return JSONResponse(
                 status_code=response.status_code,
-                content=response.json()
+                content=data
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Auth Proxy Error: {str(e)}")
