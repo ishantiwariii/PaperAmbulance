@@ -17,53 +17,65 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // 2. Listen for the Auto-Fill click from the popup.js
   if (message.action === "TRIGGER_AUTOFILL") {
-    console.log("Auto-fill requested by user. Fetching from FastAPI backend...");
+    console.log("Auto-fill requested by user. Fetching dynamic backend URL...");
 
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      if (tabs.length > 0) {
-        const tabId = tabs[0].id;
-        const formPayload = formsByTab[tabId];
+    chrome.storage.local.get(["envMode", "userToken"], (res) => {
+      const mode = res.envMode || "prod";
+      const token = res.userToken || "LOCAL_DEV_TOKEN";
+      const baseUrl = (mode === "local") ? "http://127.0.0.1:8000" : "https://paperambulance.onrender.com";
 
-        if (!formPayload || !formPayload.fields) {
-          console.error("No form data available for this tab.");
-          return;
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        if (tabs.length > 0) {
+          const tabId = tabs[0].id;
+          const formPayload = formsByTab[tabId];
+
+          if (!formPayload || !formPayload.fields) {
+            console.error("No form data available for this tab.");
+            return;
+          }
+
+          // Firing the exact fields to the FastAPI backend
+          fetch(`${baseUrl}/api/v1/analyze/fill`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(formPayload.fields)
+          })
+          .then(response => {
+              if (!response.ok) {
+                  return response.json().then(err => { 
+                    const msg = err.detail || "Server error";
+                    throw new Error(msg); 
+                  });
+              }
+              return response.json();
+          })
+          .then(data => {
+              console.log("Backend Analysis Result:", data);
+              if (data && data.fill_map) {
+                  // Send the payload to fill.js in the active tab
+                  chrome.tabs.sendMessage(tabId, {
+                    action: "EXECUTE_FILL",
+                    fill_map: data.fill_map,
+                  });
+              }
+          })
+          .catch(err => {
+              console.error("Error communicating with backend:", err);
+              const friendlyMsg = err.message.includes("404") || err.message.includes("not found") 
+                ? "Profile not found. Please speak your data or save typed profile first! 🎤"
+                : err.message;
+                
+              chrome.scripting.executeScript({
+                target: { tabId: tabId },
+                func: (msg) => alert(`🚑 PaperAmbulance: ${msg}`),
+                args: [friendlyMsg]
+              });
+          });
         }
-
-        // Firing the exact fields to the FastAPI LangGraph backend
-        fetch("https://paperambulance.onrender.com/api/v1/analyze/fill", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer LOCAL_DEV_TOKEN"
-          },
-          body: JSON.stringify(formPayload.fields)
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.detail || "Server error"); });
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log("Backend LangGraph Analysis Result:", data);
-            if (data && data.fill_map) {
-                // Send the payload to fill.js in the active tab
-                chrome.tabs.sendMessage(tabId, {
-                  action: "EXECUTE_FILL",
-                  fill_map: data.fill_map,
-                });
-            }
-        })
-        .catch(err => {
-            console.error("Error communicating with backend:", err);
-            // Alert the user on the webpage that something went wrong
-            chrome.scripting.executeScript({
-              target: { tabId: tabId },
-              func: (msg) => alert(`🚑 PaperAmbulance: ${msg}\nDid you speak your data into the extension first?`),
-              args: [err.message]
-            });
-        });
-      }
+      });
     });
   }
 
