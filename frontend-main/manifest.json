@@ -29,6 +29,7 @@
   "host_permissions": [
     "http://localhost/*",
     "http://127.0.0.1/*",
+    "https://paperambulance.onrender.com/*",
     "https://*.neonauth.c-5.us-east-1.aws.neon.tech/*"
   ],
   "permissions": ["activeTab", "storage", "scripting"]

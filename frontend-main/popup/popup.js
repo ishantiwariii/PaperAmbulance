@@ -1,7 +1,7 @@
 // popup/popup.js
 
-const BACKEND_URL = "http://localhost:8005";
-const AUTH_API_BASE = "http://localhost:8005/api/v1/auth";
+const BACKEND_URL = "https://paperambulance.onrender.com";
+const AUTH_API_BASE = "https://paperambulance.onrender.com/api/v1/auth";
 
 document.addEventListener("DOMContentLoaded", () => {
   // --- UI Elements ---

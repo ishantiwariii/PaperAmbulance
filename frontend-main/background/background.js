@@ -30,7 +30,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         // Firing the exact fields to the FastAPI LangGraph backend
-        fetch("http://localhost:8005/api/v1/analyze/fill", {
+        fetch("https://paperambulance.onrender.com/api/v1/analyze/fill", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
