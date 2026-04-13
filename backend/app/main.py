@@ -37,6 +37,17 @@ def run_migrations():
                     END IF;
                 END $$;
             """))
+            # Add clerk_id to users if missing
+            conn.execute(text("""
+                DO $$ 
+                BEGIN 
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                                   WHERE table_name='users' AND column_name='clerk_id') THEN
+                        ALTER TABLE users ADD COLUMN clerk_id VARCHAR(255);
+                        ALTER TABLE users ADD CONSTRAINT unique_clerk_id UNIQUE (clerk_id);
+                    END IF;
+                END $$;
+            """))
             conn.commit()
             print("DEBUG: Schema migration checks complete.")
         except Exception as e:

@@ -16,7 +16,6 @@ async def parse_voice(
     Input: {"transcript": "..."}
     """
     transcript = request.transcript
-    print(f"DEBUG: Received transcript for parsing: '{transcript}'")
     if not transcript:
         raise HTTPException(status_code=400, detail="Transcript is required")
     
